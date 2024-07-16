@@ -67,4 +67,28 @@ public class Controller {
             return ResponseEntity.status(500).body("Error occurred: " + e.getMessage());
         }
     }
+    
+    
+    
+    
+    @GetMapping("/demo2")
+	public ResponseEntity<String[]> demo2() {
+		try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
+			Supplier<String> response15Supplier = scope.fork(() -> demoService.fetchDataIn15Sec());
+			Supplier<String> response10Supplier = scope.fork(() -> demoService.fetchDataIn10Sec());
+			Supplier<String> response5Supplier = scope.fork(() -> demoService.fetchDataIn5Sec());
+
+			scope.join();
+			scope.throwIfFailed(); 
+
+			String response15 = response15Supplier.get();
+			String response10 = response10Supplier.get();
+			String response5 = response5Supplier.get();
+			String[] responses = { response15, response10, response5 };
+			return ResponseEntity.ok(responses);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(500).body(new String[] { "Error occurred: " + e.getMessage() });
+		}
+	}
 }
