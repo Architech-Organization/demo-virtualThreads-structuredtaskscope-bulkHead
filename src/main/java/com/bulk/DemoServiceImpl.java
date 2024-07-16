@@ -16,7 +16,7 @@ public class DemoServiceImpl implements DemoService{
 			}
 		}
 	
-		return " Current Thread name -------- "+ Thread.currentThread().getName();
+		return "Response from 10 seconds delayed call ";
 	}
 
 	@Override
@@ -30,7 +30,7 @@ public class DemoServiceImpl implements DemoService{
 			}
 		}
 	
-		return " Current Thread name -------- "+ Thread.currentThread().getName();
+		return "Response from 5 seconds delayed call ";
 	}
 	
 	
