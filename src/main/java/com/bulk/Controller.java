@@ -13,38 +13,40 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class Controller {
 
-    private DemoService demoService;
-    private ExecutorService executorService;
+	private DemoService demoService;
+	private ExecutorService executorService;
 
-    public Controller(DemoService demoService) {
-        this.demoService = demoService;
-        this.executorService = Executors.newFixedThreadPool(10); 
-    }
+	public Controller(DemoService demoService) {
+		this.demoService = demoService;
+		this.executorService = Executors.newFixedThreadPool(10);
+	}
 
-	/*
-	 * @GetMapping("/demo") public ResponseEntity<String[]> demo() {
-	 * 
-	 * Future<String> response10Future = executorService.submit(() ->
-	 * demoService.fetchDataIn10Sec()); Future<String> response5Future =
-	 * executorService.submit(() -> demoService.fetchDataIn5Sec());
-	 * 
-	 * try { String response10 = response10Future.get(); String response5 =
-	 * response5Future.get(); String[] responses = { response10, response5 }; return
-	 * ResponseEntity.ok(responses); } catch (InterruptedException |
-	 * ExecutionException e) { e.printStackTrace(); return
-	 * ResponseEntity.status(500).body(new String[] { "Error occurred: " +
-	 * e.getMessage() }); } }
-	 */
-    
-    @GetMapping("/demo")
-    public ResponseEntity<String> demo() {
+//	@GetMapping("/demo")
+//	public ResponseEntity<String[]> demo() {
+//
+//		Future<String> response10Future = executorService.submit(() -> demoService.fetchDataIn10Sec());
+//		Future<String> response5Future = executorService.submit(() -> demoService.fetchDataIn5Sec());
+//
+//		try {
+//			String response10 = response10Future.get();
+//			String response5 = response5Future.get();
+//			String[] responses = { response10, response5 };
+//			return ResponseEntity.ok(responses);
+//		} catch (InterruptedException | ExecutionException e) {
+//			e.printStackTrace();
+//			return ResponseEntity.status(500).body(new String[] { "Error occurred: " + e.getMessage() });
+//		}
+//	}
 
-    	 try (var scope = new StructuredTaskScope.ShutdownOnSuccess<String>()) {
-    		 Supplier<String> response10Future = scope.fork(() -> demoService.fetchDataIn10Sec());
-    		 Supplier<String> response5Future = scope.fork(() -> demoService.fetchDataIn5Sec());
+	@GetMapping("/demo")
+	public ResponseEntity<String> demo() {
 
-    	     
-            scope.join();
+		try (var scope = new StructuredTaskScope.ShutdownOnSuccess<ResponseModel>()) {
+			Supplier<ResponseModel> response10Future = scope.fork(() -> demoService.fetchDataIn10Sec());
+			Supplier<ResponseModel> response5Future = scope.fork(() -> demoService.fetchDataIn5Sec());
+
+			scope.join();
+
 //            String response10=null;
 //            try {
 //           if(response10Future.get()!=null) {
@@ -61,30 +63,29 @@ public class Controller {
 //            }
 //            String response5 = response5Future.get();
 //            String[] responses = { response10, response5 };
-            return ResponseEntity.ok(scope.result());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("Error occurred: " + e.getMessage());
-        }
-    }
-    
-    
-    
-    
-    @GetMapping("/demo2")
+			ResponseModel successfulResponse = scope.result();
+
+			return ResponseEntity.ok(successfulResponse.getDelayedResponse());
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(500).body("Error occurred: " + e.getMessage());
+		}
+	}
+
+	@GetMapping("/demo2")
 	public ResponseEntity<String[]> demo2() {
 		try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
-			Supplier<String> response15Supplier = scope.fork(() -> demoService.fetchDataIn15Sec());
-			Supplier<String> response10Supplier = scope.fork(() -> demoService.fetchDataIn10Sec());
-			Supplier<String> response5Supplier = scope.fork(() -> demoService.fetchDataIn5Sec());
+			Supplier<ResponseModel> response15Supplier = scope.fork(() -> demoService.fetchDataIn15Sec());
+			Supplier<ResponseModel> response10Supplier = scope.fork(() -> demoService.fetchDataIn10Sec());
+			Supplier<ResponseModel> response5Supplier = scope.fork(() -> demoService.fetchDataIn5Sec());
 
 			scope.join();
-			scope.throwIfFailed(); 
+			scope.throwIfFailed();
 
-			String response15 = response15Supplier.get();
-			String response10 = response10Supplier.get();
-			String response5 = response5Supplier.get();
-			String[] responses = { response15, response10, response5 };
+			ResponseModel response15 = response15Supplier.get();
+			ResponseModel response10 = response10Supplier.get();
+			ResponseModel response5 = response5Supplier.get();
+			String[] responses = { response15.getDelayedResponse(), response10.getDelayedResponse(), response5.getDelayedResponse() };
 			return ResponseEntity.ok(responses);
 		} catch (Exception e) {
 			e.printStackTrace();

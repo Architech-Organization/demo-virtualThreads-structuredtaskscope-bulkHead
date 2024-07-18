@@ -2,54 +2,90 @@ package com.bulk;
 
 import org.springframework.stereotype.Service;
 
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
+import lombok.extern.slf4j.Slf4j;
+
 @Service
-public class DemoServiceImpl implements DemoService{
+@Slf4j
+public class DemoServiceImpl implements DemoService {
 
 	@Override
-	public String fetchDataIn10Sec() {
-		for(int i=0; i<10; i++) {
+	@Bulkhead(name = "backendA", fallbackMethod = "getDefaultFor10Seconds")
+	public ResponseModel fetchDataIn10Sec() {
+		for (int i = 0; i < 10; i++) {
 			try {
 				Thread.currentThread().sleep(1000);
-				System.out.println("(fetchDataIn-10-Sec) Thread sleeping for------" +i+ " seconds");
+				log.info("(fetchDataIn-10-Sec) Thread sleeping for------" + i + " seconds");
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
-	
-		return "Response from 10 seconds delayed call ";
+
+		ResponseModel response = new ResponseModel("Response in 10 Seconds");
+
+		return response;
+	}
+
+	public ResponseModel getDefaultFor10Seconds(Throwable ex) {
+		log.error("getDefaultFor10Seconds() is busy");
+		log.debug("Returning default");
+		ResponseModel response = new ResponseModel("Response from FallBack for fetchDataIn10Sec");
+
+		return response;
 	}
 
 	@Override
-	public String fetchDataIn5Sec() {
-		for(int i=0; i<5; i++) {
+	@Bulkhead(name = "backendA", fallbackMethod = "getDefaultFor5Seconds")
+	public ResponseModel fetchDataIn5Sec() {
+		for (int i = 0; i < 5; i++) {
 			try {
 				Thread.currentThread().sleep(1000);
-				System.out.println("(fetchDataIn-5-Sec) Thread sleeping for------" +i+ " seconds");
+				log.info("(fetchDataIn-5-Sec) Thread sleeping for------" + i + " seconds");
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
-	
-		return "Response from 5 seconds delayed call ";
+
+		ResponseModel response = new ResponseModel("Response in 5 Seconds");
+
+		return response;
+	}
+
+	public ResponseModel getDefaultFor5Seconds(Throwable ex) {
+		log.error("getDefaultFor5Seconds() is busy");
+		log.debug("Returning default");
+		ResponseModel response = new ResponseModel("Response from FallBack for getDefaultFor5Seconds");
+
+		return response;
 	}
 
 	@Override
-	public String fetchDataIn15Sec() {
-		for(int i=0; i<15; i++) {
+	@Bulkhead(name = "backendA", fallbackMethod = "getDefaultFor15Seconds")
+	public ResponseModel fetchDataIn15Sec() {
+		for (int i = 0; i < 15; i++) {
 			try {
 				Thread.currentThread().sleep(1000);
-				System.out.println("(fetchDataIn-15-Sec) Thread sleeping for------" +i+ " seconds");
-				if (i==12) {
-				    IllegalArgumentException ill= new IllegalArgumentException();
-				    throw ill;
+				log.info("(fetchDataIn-15-Sec) Thread sleeping for------" + i + " seconds");
+				if (i == 12) {
+					IllegalArgumentException ill = new IllegalArgumentException();
+					throw ill;
 				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
-	
-		return "Response from 15 seconds delayed call ";
+
+		ResponseModel response = new ResponseModel("Response in 15 Seconds");
+
+		return response;
 	}
-	
-	
+
+	public ResponseModel getDefaultFor15Seconds(Throwable ex) {
+		log.error("getDefaultFor15Seconds() is busy");
+		log.debug("Returning default");
+		ResponseModel response = new ResponseModel("Response from FallBack for getDefaultFor15Seconds");
+
+		return response;
+	}
+
 }
